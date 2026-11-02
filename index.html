@@ -121,7 +121,10 @@ legend{font-weight:600;margin-bottom:10px;padding:0}
 .switch span::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .switch input:checked+span{background:var(--blob-strong)}
 .switch input:checked+span::after{transform:translateX(22px)}
-dialog .btn{width:100%;margin-top:14px}
+dialog .btn.solid{width:100%;margin-top:14px}
+.testrow{flex-direction:column;align-items:stretch;gap:10px}
+.tests{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.btn.small{min-height:40px;padding:0 14px;font-size:14px}
 
 @media (prefers-reduced-motion: reduce){
   .urgent .num{animation:none}
@@ -179,6 +182,10 @@ dialog .btn{width:100%;margin-top:14px}
     <p>A-B-C-Modus<small>Zeigt bei jeder Antwort den nächsten Buchstaben</small></p>
     <label class="switch"><input type="checkbox" id="abcToggle" aria-label="A-B-C-Modus"><span></span></label>
   </div>
+  <div class="row testrow">
+    <p>Töne testen<small>Bei Stille: Lautstärke und Stummschalter prüfen</small></p>
+    <div class="tests"><button class="btn small" id="testNext">Weiter</button><button class="btn small" id="testTick">Piep</button><button class="btn small" id="testEnd">Zeit um</button></div>
+  </div>
   <button class="btn solid" id="closeSettings">Fertig</button>
 </dialog>
 
@@ -202,21 +209,71 @@ dialog .btn{width:100%;margin-top:14px}
   var deadline = 0, remainingMs = settings.dur * 1000, raf = 0, lastSec = null, letterIdx = 0;
 
   // ---------- Audio ----------
-  var ctx = null;
+  var ctx = null, master = null, unlocked = false;
+  // iPhone: Ton auch bei Stummschalter abspielen (Safari 16.4+)
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
   function ensureAudio(){
-    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-    if (ctx && ctx.state === "suspended") { ctx.resume(); }
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var comp = ctx.createDynamicsCompressor();
+        master = ctx.createGain(); master.gain.value = 1;
+        master.connect(comp); comp.connect(ctx.destination);
+      } catch (e) { ctx = null; }
+    }
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    if (!unlocked) {
+      // stiller Puffer entsperrt Audio auf iOS
+      try {
+        var b = ctx.createBuffer(1, 1, 22050), src = ctx.createBufferSource();
+        src.buffer = b; src.connect(ctx.destination); src.start(0);
+        unlocked = true;
+      } catch (e) {}
+    }
   }
-  function beep(freq, dur, vol, when, type){
+  function tone(o){
     if (!settings.sound || !ctx) return;
-    var t = ctx.currentTime + (when || 0);
-    var o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type || "sine"; o.frequency.value = freq;
+    var t = ctx.currentTime + (o.when || 0), dur = o.dur, vol = o.vol || 0.5;
+    var g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol || 0.25, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+    g.gain.setValueAtTime(vol, t + dur * 0.7);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(ctx.destination);
-    o.start(t); o.stop(t + dur + 0.03);
+    g.connect(master);
+    (o.detune || [0]).forEach(function(d){
+      var osc = ctx.createOscillator();
+      osc.type = o.type || "square";
+      osc.frequency.setValueAtTime(o.freq, t);
+      if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+      osc.detune.value = d;
+      osc.connect(g); osc.start(t); osc.stop(t + dur + 0.05);
+    });
+  }
+  // Kurzer, heller Tick für 5–2 Sekunden, höher bei der letzten Sekunde
+  function tick(sec){ tone({ freq: sec === 1 ? 1568 : 1175, dur: 0.11, vol: 0.55, type: "square" }); }
+  // Bestätigung beim Zurücksetzen
+  function confirmSound(){
+    // deutliches „Ding-Ding“ (aufsteigend) bei jeder Antwort bzw. jedem neuen Buchstaben
+    tone({ freq: 1047, dur: 0.09, vol: 0.6, type: "square" });
+    tone({ freq: 1568, dur: 0.16, vol: 0.6, type: "square", when: 0.1 });
+  }
+  // Startsignal: drei kurze Töne wie „3, 2, 1 – los“
+  function startSound(){
+    tone({ freq: 784, dur: 0.08, vol: 0.55, type: "square" });
+    tone({ freq: 784, dur: 0.08, vol: 0.55, type: "square", when: 0.12 });
+    tone({ freq: 1175, dur: 0.22, vol: 0.6, type: "square", when: 0.24 });
+  }
+  // Zeit abgelaufen: tiefer, schnarrender Buzzer wie in einer Quizshow
+  function buzzer(){
+    tone({ freq: 196, to: 150, dur: 1.1, vol: 0.7, type: "sawtooth", detune: [-12, 0, 14] });
+    tone({ freq: 98, to: 75, dur: 1.1, vol: 0.5, type: "square" });
+  }
+  // A bis Z geschafft: kleine Fanfare
+  function fanfare(){
+    [523, 659, 784, 1047].forEach(function(f, i){
+      tone({ freq: f, dur: i === 3 ? 0.45 : 0.13, vol: 0.45, type: "triangle", when: i * 0.14 });
+    });
   }
   function vibrate(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 
@@ -282,7 +339,7 @@ dialog .btn{width:100%;margin-top:14px}
       remainingMs = ms;
       var sec = Math.ceil(ms / 1000);
       if (sec !== lastSec) {
-        if (lastSec !== null && sec <= 5 && sec > 0) beep(sec === 1 ? 1040 : 760, 0.12, 0.28);
+        if (lastSec !== null && sec <= 5 && sec > 0) tick(sec);
         lastSec = sec;
       }
       draw(ms);
@@ -303,16 +360,14 @@ dialog .btn{width:100%;margin-top:14px}
   }
   function expire(){
     state = "expired";
-    beep(520, 0.25, 0.35, 0, "square");
-    beep(520, 0.25, 0.35, 0.32, "square");
-    beep(390, 0.55, 0.35, 0.64, "square");
+    buzzer();
     vibrate([250, 120, 250, 120, 400]);
     render();
   }
   function finishAlphabet(){
     state = "done";
     cancelAnimationFrame(raf);
-    beep(660, 0.12, 0.25); beep(880, 0.12, 0.25, 0.13); beep(1100, 0.3, 0.25, 0.26);
+    fanfare();
     vibrate(60);
     render();
   }
@@ -341,7 +396,7 @@ dialog .btn{width:100%;margin-top:14px}
 
   function tap(){
     ensureAudio();
-    if (state === "idle" || state === "expired" || state === "done") { start(); bump(); return; }
+    if (state === "idle" || state === "expired" || state === "done") { start(); startSound(); vibrate(30); bump(); return; }
     if (state === "paused") { resume(); return; }
     if (state === "running") {
       if (settings.abc) {
@@ -349,7 +404,7 @@ dialog .btn{width:100%;margin-top:14px}
         if (letterIdx >= LETTERS.length) { finishAlphabet(); return; }
       }
       restartCountdown();
-      beep(880, 0.07, 0.2);
+      confirmSound();
       vibrate(30);
       bump();
     }
@@ -361,6 +416,9 @@ dialog .btn{width:100%;margin-top:14px}
     e.preventDefault(); tap();
   });
   stage.addEventListener("click", function(e){ if (e.detail === 0) tap(); });
+  ["touchend", "click", "keydown"].forEach(function(ev){
+    document.addEventListener(ev, ensureAudio, { passive: true });
+  });
   pauseBtn.addEventListener("click", function(){ ensureAudio(); state === "paused" ? resume() : pause(); });
   resetBtn.addEventListener("click", resetAll);
 
@@ -382,6 +440,9 @@ dialog .btn{width:100%;margin-top:14px}
   $("durChips").addEventListener("change", function(e){
     settings.dur = Number(e.target.value); save(); resetAll();
   });
+  $("testTick").addEventListener("click", function(){ ensureAudio(); var was = settings.sound; settings.sound = true; tick(3); tone({ freq: 1568, dur: 0.11, vol: 0.55, type: "square", when: 0.35 }); settings.sound = was; });
+  $("testNext").addEventListener("click", function(){ ensureAudio(); var was = settings.sound; settings.sound = true; confirmSound(); settings.sound = was; });
+  $("testEnd").addEventListener("click", function(){ ensureAudio(); var was = settings.sound; settings.sound = true; buzzer(); settings.sound = was; });
   $("soundToggle").addEventListener("change", function(e){ settings.sound = e.target.checked; save(); });
   $("abcToggle").addEventListener("change", function(e){ settings.abc = e.target.checked; save(); resetAll(); });
 
