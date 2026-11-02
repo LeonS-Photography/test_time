@@ -90,7 +90,8 @@ svg.ring{width:100%;height:100%;transform:rotate(-90deg);display:block}
 .abc .letter{display:inline-flex}
 .hint{color:var(--muted);font-size:clamp(15px,4vw,18px);text-align:center;margin:0;min-height:2.6em;max-width:28ch;line-height:1.35}
 
-footer{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+footer{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:520px;margin:0 auto}
+footer .btn{min-height:68px;font-size:clamp(18px,5vw,22px);border-width:3px;padding:0 12px;white-space:nowrap}
 .btn{
   min-height:50px;padding:0 24px;border-radius:999px;border:2px solid var(--ink);
   background:transparent;color:var(--ink);font:600 16px "Lexend",system-ui,sans-serif;cursor:pointer;
