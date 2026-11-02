@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e8ecea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#142224" media="(prefers-color-scheme: dark)">
+<title>Challenges – Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e8ecea; --blob:#d5dfdb; --blob-strong:#2b6e68; --surface:#f7f9f8;
+  --ink:#1d2b36; --muted:#56666c; --track:#d0dad6;
+  --ring:#d4c200; --urgent:#9a2c2c; --chip-ink:#1d2b36;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#142224; --blob:#1b3133; --blob-strong:#1f4f4b; --surface:#1b2e30;
+    --ink:#eef3f2; --muted:#9fb2b1; --track:#24393b;
+    --ring:#e6d63a; --urgent:#ef6b62; --chip-ink:#1d2b36;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#142224; --blob:#1b3133; --blob-strong:#1f4f4b; --surface:#1b2e30;
+  --ink:#eef3f2; --muted:#9fb2b1; --track:#24393b;
+  --ring:#e6d63a; --urgent:#ef6b62; --chip-ink:#1d2b36;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Lexend",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  overflow:hidden; -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation; user-select:none; -webkit-user-select:none;
+}
+.blob{position:fixed;pointer-events:none;z-index:0}
+.blob.tl{top:-70px;right:-90px;width:230px;fill:var(--blob-strong);transform:scaleX(-1)}
+.blob.br{bottom:-120px;right:-120px;width:min(80vw,520px);fill:var(--blob)}
+
+.app{
+  position:relative; z-index:1; height:100%;
+  display:grid; grid-template-rows:auto 1fr auto;
+  padding:14px max(20px,env(safe-area-inset-right,0px)) 18px max(20px,env(safe-area-inset-left,0px));
+}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-family:"Kaushan Script","Brush Script MT",cursive;font-size:clamp(30px,8vw,44px);line-height:1.1;color:var(--ink);margin:0;font-weight:400}
+.logo span{font-family:"Lexend",system-ui,sans-serif;font-size:.38em;font-weight:400;margin-left:.35em;opacity:.85}
+.iconbtn{
+  width:46px;height:46px;border-radius:50%;border:0;display:grid;place-items:center;
+  background:var(--surface);color:var(--ink);cursor:pointer;
+}
+.iconbtn:focus-visible,.btn:focus-visible,.chip input:focus-visible+span,.switch input:focus-visible+span{outline:3px solid var(--ring);outline-offset:3px}
+
+.stage{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.5vh,22px);
+  border:0;background:none;color:inherit;font:inherit;width:100%;min-height:0;cursor:pointer;padding:0;
+}
+.stage:focus{outline:none}
+.stage:focus-visible .ring-wrap{outline:3px solid var(--ring);outline-offset:10px;border-radius:50%}
+.ring-wrap{--size:min(78vw,50vh,420px);position:relative;width:var(--size);height:var(--size);transition:transform .12s ease}
+.ring-wrap.bump{transform:scale(.96)}
+svg.ring{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.track{stroke:var(--track);fill:none;stroke-width:14}
+.bar{stroke:var(--ring);fill:none;stroke-width:14;stroke-linecap:round;transition:stroke .25s}
+.num{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-weight:800;font-size:calc(var(--size) * .4);font-variant-numeric:tabular-nums;
+  letter-spacing:-.03em;line-height:1;
+}
+.num.small{font-size:calc(var(--size) * .16);letter-spacing:0;font-weight:600;text-align:center;padding:0 12%}
+.urgent .bar{stroke:var(--urgent)}
+.urgent .num{color:var(--urgent);animation:pulse 1s ease-in-out infinite}
+.expired .num{color:var(--urgent)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+.letter{
+  display:none;align-items:center;gap:.5em;
+  background:var(--ring);color:var(--chip-ink);border-radius:999px;
+  padding:.2em .9em .2em .7em;font-weight:600;font-size:clamp(16px,4.2vw,20px);
+}
+.letter b{font-size:1.6em;font-weight:800;line-height:1}
+.abc .letter{display:inline-flex}
+.hint{color:var(--muted);font-size:clamp(15px,4vw,18px);text-align:center;margin:0;min-height:2.6em;max-width:28ch;line-height:1.35}
+
+footer{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{
+  min-height:50px;padding:0 24px;border-radius:999px;border:2px solid var(--ink);
+  background:transparent;color:var(--ink);font:600 16px "Lexend",system-ui,sans-serif;cursor:pointer;
+}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.solid{background:var(--ink);color:var(--bg)}
+
+dialog{
+  border:0;border-radius:22px;background:var(--surface);color:var(--ink);
+  padding:24px 22px;width:min(92vw,420px);max-height:85vh;
+}
+dialog::backdrop{background:rgba(10,20,22,.55)}
+dialog h2{margin:0 0 18px;font-size:22px;font-weight:600}
+fieldset{border:0;padding:0;margin:0 0 20px}
+legend{font-weight:600;margin-bottom:10px;padding:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip input,.switch input{position:absolute;opacity:0;pointer-events:none}
+.chip span{
+  display:inline-block;min-width:64px;text-align:center;padding:10px 14px;border-radius:999px;
+  border:2px solid var(--track);cursor:pointer;font-weight:600;
+}
+.chip input:checked+span{background:var(--ring);border-color:var(--ring);color:var(--chip-ink)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--track)}
+.row p{margin:0;line-height:1.35}
+.row small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.switch{position:relative;flex:none}
+.switch span{display:block;width:54px;height:32px;border-radius:999px;background:var(--track);position:relative;cursor:pointer;transition:background .2s}
+.switch span::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch input:checked+span{background:var(--blob-strong)}
+.switch input:checked+span::after{transform:translateX(22px)}
+dialog .btn{width:100%;margin-top:14px}
+
+@media (prefers-reduced-motion: reduce){
+  .urgent .num{animation:none}
+  .ring-wrap,.bar,.switch span,.switch span::after{transition:none}
+}
+@media (max-height:520px){ .hint{min-height:0} }
+</style>
+</head>
+<body>
+<svg class="blob tl" viewBox="0 0 260 260" aria-hidden="true"><path d="M0 0h230c30 40 20 95-15 125-40 35-60 40-75 85-12 35-60 55-100 40L0 245Z"/></svg>
+<svg class="blob br" viewBox="0 0 500 500" aria-hidden="true"><path d="M420 30c60 40 80 140 70 230s-40 200-130 230S150 470 110 400 40 300 90 220 230 140 300 80 360-10 420 30Z"/></svg>
+
+<div class="app">
+  <header>
+    <h1 class="logo">Challenges<span>Timer</span></h1>
+    <button class="iconbtn" id="openSettings" aria-label="Einstellungen">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+    </button>
+  </header>
+
+  <button class="stage" id="stage" aria-label="Timer: tippen zum Starten oder Zurücksetzen">
+    <div class="ring-wrap" id="ringWrap">
+      <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="track" cx="100" cy="100" r="90"/>
+        <circle class="bar" id="bar" cx="100" cy="100" r="90" stroke-dasharray="565.49" stroke-dashoffset="0"/>
+      </svg>
+      <div class="num" id="num" aria-live="off">30</div>
+    </div>
+    <div class="letter" id="letter">Buchstabe <b id="letterVal">A</b></div>
+    <p class="hint" id="hint" aria-live="polite">Tippen zum Starten</p>
+  </button>
+
+  <footer>
+    <button class="btn" id="pauseBtn" disabled>Pause</button>
+    <button class="btn solid" id="resetBtn">Neu starten</button>
+  </footer>
+</div>
+
+<dialog id="settings" aria-labelledby="settingsTitle">
+  <h2 id="settingsTitle">Einstellungen</h2>
+  <fieldset>
+    <legend>Zeit pro Antwort</legend>
+    <div class="chips" id="durChips">
+      <label class="chip"><input type="radio" name="dur" value="15"><span>15 s</span></label>
+      <label class="chip"><input type="radio" name="dur" value="30"><span>30 s</span></label>
+      <label class="chip"><input type="radio" name="dur" value="45"><span>45 s</span></label>
+      <label class="chip"><input type="radio" name="dur" value="60"><span>60 s</span></label>
+    </div>
+  </fieldset>
+  <div class="row">
+    <p>Ton<small>Piept in den letzten 5 Sekunden</small></p>
+    <label class="switch"><input type="checkbox" id="soundToggle" aria-label="Ton"><span></span></label>
+  </div>
+  <div class="row">
+    <p>A-B-C-Modus<small>Zeigt bei jeder Antwort den nächsten Buchstaben</small></p>
+    <label class="switch"><input type="checkbox" id="abcToggle" aria-label="A-B-C-Modus"><span></span></label>
+  </div>
+  <button class="btn solid" id="closeSettings">Fertig</button>
+</dialog>
+
+<script>
+(function(){
+  var C = 2 * Math.PI * 90;
+  var LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var settings = { dur: 30, sound: true, abc: false };
+  try {
+    var saved = JSON.parse(localStorage.getItem("challenges-timer") || "null");
+    if (saved) { for (var k in saved) settings[k] = saved[k]; }
+  } catch (e) {}
+  function save(){ try { localStorage.setItem("challenges-timer", JSON.stringify(settings)); } catch (e) {} }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var stage = $("stage"), ringWrap = $("ringWrap"), bar = $("bar"), num = $("num"),
+      hint = $("hint"), letterVal = $("letterVal"), pauseBtn = $("pauseBtn"), resetBtn = $("resetBtn"),
+      dlg = $("settings");
+
+  var state = "idle";      // idle | running | paused | expired | done
+  var deadline = 0, remainingMs = settings.dur * 1000, raf = 0, lastSec = null, letterIdx = 0;
+
+  // ---------- Audio ----------
+  var ctx = null;
+  function ensureAudio(){
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (ctx && ctx.state === "suspended") { ctx.resume(); }
+  }
+  function beep(freq, dur, vol, when, type){
+    if (!settings.sound || !ctx) return;
+    var t = ctx.currentTime + (when || 0);
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.25, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  function vibrate(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+  // ---------- Bildschirm wach halten ----------
+  var wake = null;
+  function requestWake(){
+    try {
+      if ("wakeLock" in navigator && !wake) {
+        navigator.wakeLock.request("screen").then(function(w){
+          wake = w; w.addEventListener("release", function(){ wake = null; });
+        }).catch(function(){});
+      }
+    } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible" && (state === "running" || state === "paused")) requestWake();
+  });
+
+  // ---------- Darstellung ----------
+  function draw(ms){
+    var total = settings.dur * 1000;
+    var sec = Math.ceil(ms / 1000);
+    num.textContent = sec;
+    num.classList.remove("small");
+    bar.setAttribute("stroke-dashoffset", (C * (1 - ms / total)).toFixed(2));
+    stage.classList.toggle("urgent", state === "running" && ms > 0 && ms <= 5000);
+  }
+  function render(){
+    stage.classList.toggle("abc", !!settings.abc);
+    stage.classList.toggle("expired", state === "expired");
+    letterVal.textContent = LETTERS[Math.min(letterIdx, 25)];
+    pauseBtn.disabled = !(state === "running" || state === "paused");
+    pauseBtn.textContent = state === "paused" ? "Weiter" : "Pause";
+
+    if (state === "idle") {
+      draw(settings.dur * 1000);
+      hint.textContent = "Tippen zum Starten";
+    } else if (state === "running") {
+      hint.textContent = settings.abc
+        ? "Antwort mit „" + LETTERS[letterIdx] + "“ gegeben? Tippen – nächster Buchstabe."
+        : "Antwort gegeben? Tippen – wieder " + settings.dur + " Sekunden.";
+    } else if (state === "paused") {
+      hint.textContent = "Pausiert – tippen zum Weitermachen";
+    } else if (state === "expired") {
+      draw(0);
+      stage.classList.remove("urgent");
+      hint.textContent = "Zeit abgelaufen! Das Team scheidet aus. Tippen für die nächste Runde.";
+    } else if (state === "done") {
+      num.textContent = "A bis Z geschafft!";
+      num.classList.add("small");
+      bar.setAttribute("stroke-dashoffset", "0");
+      stage.classList.remove("urgent");
+      hint.textContent = "Tippen für eine neue Runde";
+    }
+  }
+
+  // ---------- Ablauf ----------
+  function loop(){
+    cancelAnimationFrame(raf);
+    var step = function(){
+      if (state !== "running") return;
+      var ms = Math.max(0, deadline - performance.now());
+      remainingMs = ms;
+      var sec = Math.ceil(ms / 1000);
+      if (sec !== lastSec) {
+        if (lastSec !== null && sec <= 5 && sec > 0) beep(sec === 1 ? 1040 : 760, 0.12, 0.28);
+        lastSec = sec;
+      }
+      draw(ms);
+      if (ms <= 0) { expire(); return; }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  function restartCountdown(){
+    deadline = performance.now() + settings.dur * 1000;
+    lastSec = null; state = "running";
+    render(); loop();
+  }
+  function start(){
+    letterIdx = 0;
+    restartCountdown();
+    requestWake();
+  }
+  function expire(){
+    state = "expired";
+    beep(520, 0.25, 0.35, 0, "square");
+    beep(520, 0.25, 0.35, 0.32, "square");
+    beep(390, 0.55, 0.35, 0.64, "square");
+    vibrate([250, 120, 250, 120, 400]);
+    render();
+  }
+  function finishAlphabet(){
+    state = "done";
+    cancelAnimationFrame(raf);
+    beep(660, 0.12, 0.25); beep(880, 0.12, 0.25, 0.13); beep(1100, 0.3, 0.25, 0.26);
+    vibrate(60);
+    render();
+  }
+  function bump(){
+    ringWrap.classList.add("bump");
+    setTimeout(function(){ ringWrap.classList.remove("bump"); }, 120);
+  }
+  function pause(){
+    if (state !== "running") return;
+    remainingMs = Math.max(0, deadline - performance.now());
+    state = "paused"; cancelAnimationFrame(raf);
+    stage.classList.remove("urgent");
+    render();
+  }
+  function resume(){
+    if (state !== "paused") return;
+    deadline = performance.now() + remainingMs;
+    state = "running"; render(); loop();
+  }
+  function resetAll(){
+    cancelAnimationFrame(raf);
+    state = "idle"; letterIdx = 0; remainingMs = settings.dur * 1000; lastSec = null;
+    stage.classList.remove("urgent");
+    render();
+  }
+
+  function tap(){
+    ensureAudio();
+    if (state === "idle" || state === "expired" || state === "done") { start(); bump(); return; }
+    if (state === "paused") { resume(); return; }
+    if (state === "running") {
+      if (settings.abc) {
+        letterIdx++;
+        if (letterIdx >= LETTERS.length) { finishAlphabet(); return; }
+      }
+      restartCountdown();
+      beep(880, 0.07, 0.2);
+      vibrate(30);
+      bump();
+    }
+  }
+
+  // Sofort bei Berührung reagieren, Tastatur über click (detail 0)
+  stage.addEventListener("pointerdown", function(e){
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault(); tap();
+  });
+  stage.addEventListener("click", function(e){ if (e.detail === 0) tap(); });
+  pauseBtn.addEventListener("click", function(){ ensureAudio(); state === "paused" ? resume() : pause(); });
+  resetBtn.addEventListener("click", resetAll);
+
+  // ---------- Einstellungen ----------
+  function syncSettingsUI(){
+    var radios = document.querySelectorAll('input[name="dur"]');
+    for (var i = 0; i < radios.length; i++) radios[i].checked = Number(radios[i].value) === settings.dur;
+    $("soundToggle").checked = !!settings.sound;
+    $("abcToggle").checked = !!settings.abc;
+  }
+  $("openSettings").addEventListener("click", function(){
+    if (state === "running") pause();
+    syncSettingsUI();
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  });
+  $("closeSettings").addEventListener("click", function(){
+    if (dlg.close) dlg.close(); else dlg.removeAttribute("open");
+  });
+  $("durChips").addEventListener("change", function(e){
+    settings.dur = Number(e.target.value); save(); resetAll();
+  });
+  $("soundToggle").addEventListener("change", function(e){ settings.sound = e.target.checked; save(); });
+  $("abcToggle").addEventListener("change", function(e){ settings.abc = e.target.checked; save(); resetAll(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
