@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#e8ecea" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#142224" media="(prefers-color-scheme: dark)">
-<title>Challenges – Timer</title>
+<title>Challenges</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
@@ -132,15 +132,62 @@ dialog .btn.solid{width:100%;margin-top:14px}
   .ring-wrap,.bar,.switch span,.switch span::after{transition:none}
 }
 @media (max-height:520px){ .hint{min-height:0} }
+
+/* ---------- Ansichten & Anleitungen ---------- */
+:root{ --accent:#2b6e68; --paperfill:#ffffff; --pstroke:#1d2b36; --flapfill:#f2e98c; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --accent:#6cc4b9; --paperfill:#e6eceb; --pstroke:#1d2b36; --flapfill:#d8cc62; } }
+:root[data-theme="dark"]{ --accent:#6cc4b9; --paperfill:#e6eceb; --pstroke:#1d2b36; --flapfill:#d8cc62; }
+.view{display:none !important}
+.view.active{display:grid !important}
+.backbtn{text-decoration:none}
+.headl{display:flex;align-items:center;gap:10px;min-width:0}
+.home{position:relative;z-index:1;height:100%;overflow-y:auto;grid-template-rows:auto 1fr;
+  padding:14px max(20px,env(safe-area-inset-right,0px)) 18px max(20px,env(safe-area-inset-left,0px))}
+.home-inner{display:flex;flex-direction:column;justify-content:center;gap:14px;max-width:520px;width:100%;margin:0 auto;padding:12px 0}
+.home-intro{color:var(--muted);margin:0 0 6px;font-size:clamp(15px,4vw,18px);line-height:1.4}
+.tile{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:22px;background:var(--surface);
+  color:var(--ink);text-decoration:none;border:2px solid transparent;min-height:92px}
+.tile:focus-visible{outline:3px solid var(--ring);outline-offset:3px}
+.tile:active{transform:scale(.98)}
+.tile .ic{flex:none;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;color:#1d2b36}
+.tile b{display:block;font-size:clamp(19px,5vw,22px);font-weight:600}
+.tile small{display:block;color:var(--muted);font-size:15px;margin-top:2px;line-height:1.3}
+.guide{position:relative;z-index:1;height:100%;overflow-y:auto;grid-template-rows:auto 1fr auto;gap:10px;
+  padding:14px max(20px,env(safe-area-inset-right,0px)) 18px max(20px,env(safe-area-inset-left,0px))}
+.gtitle{font-weight:600;font-size:clamp(20px,5.5vw,24px);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gcard{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:560px;width:100%;margin:0 auto;min-height:0;touch-action:pan-y}
+.gfig{width:100%;flex:1 1 auto;min-height:180px;max-height:46vh;background:var(--surface);border-radius:22px;display:grid;place-items:center;padding:10px}
+.gfig svg{width:100%;height:100%;max-height:calc(46vh - 20px)}
+.gstep{color:var(--muted);font-size:15px;margin:4px 0 0;font-weight:600;letter-spacing:.02em}
+.gcard h2{margin:0;font-size:clamp(19px,5vw,22px);font-weight:600;text-align:center}
+.gcard p.gtext{margin:0;font-size:clamp(16px,4.3vw,18px);line-height:1.45;text-align:center;max-width:34ch;min-height:4.4em}
+.dots{display:flex;gap:7px;justify-content:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--track)}
+.dots i.on{background:var(--accent);width:22px;border-radius:5px}
+.gnav{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:560px;margin:0 auto}
+.gnav .btn{min-height:64px;font-size:clamp(17px,4.6vw,20px);border-width:3px;white-space:nowrap;padding:0 12px}
+svg .paper{fill:var(--paperfill);stroke:var(--pstroke);stroke-width:1.8;stroke-linejoin:round}
+svg .flap{fill:var(--flapfill);stroke:var(--pstroke);stroke-width:1.8;stroke-linejoin:round}
+svg .fold{stroke:var(--accent);stroke-width:1.8;stroke-dasharray:7 5;fill:none}
+svg .ghost{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 4;fill:none}
+svg .edge{stroke:var(--pstroke);stroke-width:4;stroke-linecap:round}
+svg .arrow{stroke:var(--accent);stroke-width:2.4;fill:none;stroke-linecap:round;marker-end:url(#ah)}
+svg .lbl{fill:var(--muted);font:600 11px "Lexend",system-ui,sans-serif}
+#ah path{fill:var(--accent)}
 </style>
 </head>
 <body>
 <svg class="blob tl" viewBox="0 0 260 260" aria-hidden="true"><path d="M0 0h230c30 40 20 95-15 125-40 35-60 40-75 85-12 35-60 55-100 40L0 245Z"/></svg>
 <svg class="blob br" viewBox="0 0 500 500" aria-hidden="true"><path d="M420 30c60 40 80 140 70 230s-40 200-130 230S150 470 110 400 40 300 90 220 230 140 300 80 360-10 420 30Z"/></svg>
 
-<div class="app">
+<div class="app view" id="view-timer">
   <header>
-    <h1 class="logo">Challenges<span>Timer</span></h1>
+    <div class="headl">
+      <a class="iconbtn backbtn" href="#start" aria-label="Zur Startseite">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </a>
+      <h1 class="logo">Challenges<span>Timer</span></h1>
+    </div>
     <button class="iconbtn" id="openSettings" aria-label="Einstellungen">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
     </button>
@@ -161,6 +208,52 @@ dialog .btn.solid{width:100%;margin-top:14px}
   <footer>
     <button class="btn" id="pauseBtn" disabled>Pause</button>
     <button class="btn solid" id="resetBtn">Neu starten</button>
+  </footer>
+</div>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>
+</svg>
+
+<div class="home view" id="view-home">
+  <header><h1 class="logo">Challenges</h1></header>
+  <main class="home-inner">
+    <p class="home-intro">Alles, was ihr neben den Karten für den Spieleabend braucht.</p>
+    <a class="tile" href="#timer">
+      <span class="ic" style="background:#d4c200"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/></svg></span>
+      <span><b>30-Sekunden-Timer</b><small>Für die Grübelzeit – tippen setzt die Zeit zurück</small></span>
+    </a>
+    <a class="tile" href="#flieger">
+      <span class="ic" style="background:#6fb3d6"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M2 11l20-8-7 18-3.5-7.5z"/><path d="M11.5 13.5L22 3"/></svg></span>
+      <span><b>Papierflieger falten</b><small>Klassischer Flieger aus einem A4-Blatt</small></span>
+    </a>
+    <a class="tile" href="#boot">
+      <span class="ic" style="background:#e8a0a0"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M2 14h20l-4 6H6z"/><path d="M12 3l5 11H7z"/></svg></span>
+      <span><b>Papierboot falten</b><small>Schwimmendes Boot aus einem A4-Blatt</small></span>
+    </a>
+  </main>
+</div>
+
+<div class="guide view" id="view-guide">
+  <header>
+    <div class="headl">
+      <a class="iconbtn backbtn" href="#start" aria-label="Zur Startseite">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </a>
+      <h1 class="gtitle" id="gTitle">Anleitung</h1>
+    </div>
+  </header>
+  <main class="gcard" id="gCard">
+    <div class="gfig" id="gFig"></div>
+    <div class="dots" id="gDots"></div>
+    <p class="gstep" id="gStep"></p>
+    <h2 id="gHead"></h2>
+    <p class="gtext" id="gText"></p>
+  </main>
+  <footer class="gnav">
+    <button class="btn" id="gPrev">Zurück</button>
+    <button class="btn solid" id="gNext">Weiter</button>
   </footer>
 </div>
 
@@ -448,7 +541,110 @@ dialog .btn.solid{width:100%;margin-top:14px}
   $("abcToggle").addEventListener("change", function(e){ settings.abc = e.target.checked; save(); resetAll(); });
 
   render();
+  window.ChallengesTimer = { pause: pause };
 })();
 </script>
+<script>
+(function(){
+  // ---------- Faltanleitungen (eigene Zeichnungen) ----------
+  var VB_P = '0 0 200 220', VB_B = '0 0 220 190';
+  var GUIDES = {
+    flieger: { title: 'Papierflieger', vb: VB_P, steps: [
+      { h: 'Mittelfalte', t: 'Leg das A4-Blatt hochkant vor dich. Falte es der Länge nach genau in der Mitte und klapp es wieder auf. Das ist deine Mittellinie.',
+        svg: '<rect class="paper" x="40" y="25" width="120" height="170"/><line class="fold" x1="100" y1="25" x2="100" y2="195"/><path class="arrow" d="M150 120 C 135 88, 65 88, 50 120"/><text class="lbl" x="100" y="212" text-anchor="middle">DIN A4 hochkant</text>' },
+      { h: 'Ecken zur Mitte', t: 'Falte die beiden oberen Ecken so nach innen, dass die Oberkanten genau auf der Mittellinie liegen. Oben entsteht eine Spitze.',
+        svg: '<polyline class="ghost" points="40,85 40,25 160,25 160,85"/><polygon class="paper" points="100,25 160,85 160,195 40,195 40,85"/><polygon class="flap" points="100,25 40,85 100,85"/><polygon class="flap" points="100,25 160,85 100,85"/><line class="fold" x1="100" y1="85" x2="100" y2="195"/><path class="arrow" d="M44 30 C 52 58, 70 70, 88 78"/><path class="arrow" d="M156 30 C 148 58, 130 70, 112 78"/>' },
+      { h: 'Noch einmal zur Mitte', t: 'Falte die neuen schrägen Kanten links und rechts noch einmal zur Mittellinie. Die Spitze wird schmaler und schwerer – so fliegt der Flieger stabiler.',
+        svg: '<polyline class="ghost" points="40,170 40,85 100,25 160,85 160,170"/><polygon class="paper" points="100,25 160,170 160,195 40,195 40,170"/><polygon class="flap" points="100,25 40,170 100,110"/><polygon class="flap" points="100,25 160,170 100,110"/><line class="fold" x1="100" y1="110" x2="100" y2="195"/><path class="arrow" d="M44 110 C 56 118, 70 118, 86 112"/><path class="arrow" d="M156 110 C 144 118, 130 118, 114 112"/>' },
+      { h: 'Zusammenklappen', t: 'Klapp den Flieger entlang der Mittelfalte nach hinten zusammen, sodass die gefalteten Teile außen liegen. Leg ihn so hin, dass die Spitze nach links zeigt.',
+        svg: '<polygon class="paper" points="20,150 180,150 180,80"/><polygon class="flap" points="20,150 180,112 180,150"/><line class="edge" x1="20" y1="150" x2="180" y2="150"/><text class="lbl" x="100" y="172" text-anchor="middle">Mittelfalte unten</text>' },
+      { h: 'Flügel falten', t: 'Falte die vordere Lage als Flügel nach unten: Die Oberkante kommt genau auf die Unterkante. Dreh den Flieger um und falte den zweiten Flügel genauso.',
+        svg: '<polygon class="paper" points="20,150 180,150 180,80"/><line class="fold" x1="22" y1="147" x2="180" y2="131"/><line class="edge" x1="20" y1="150" x2="180" y2="150"/><path class="arrow" d="M172 90 C 190 104, 190 124, 172 138"/><text class="lbl" x="100" y="172" text-anchor="middle">ca. 1,5 cm Rumpf stehen lassen</text>' },
+      { h: 'Fertig!', t: 'Klapp beide Flügel auf, bis sie waagerecht stehen. Halt den Flieger unten am Rumpf und wirf ihn mit Schwung leicht nach oben. Tipp: Die hinteren Flügelkanten minimal nach oben biegen – dann gleitet er länger.',
+        svg: '<polygon class="paper" points="100,22 176,182 108,182 100,198 92,182 24,182"/><line class="fold" x1="100" y1="22" x2="100" y2="198"/><polygon class="flap" points="100,22 108,182 100,198 92,182"/>' }
+    ]},
+    boot: { title: 'Papierboot', vb: VB_B, steps: [
+      { h: 'In der Hälfte falten', t: 'Leg das A4-Blatt hochkant hin und falte es von oben nach unten genau in der Mitte. Die geschlossene Bruchkante liegt jetzt oben.',
+        svg: '<rect class="paper" x="50" y="15" width="120" height="170"/><line class="fold" x1="50" y1="100" x2="170" y2="100"/><path class="arrow" d="M176 24 C 204 60, 204 140, 176 176"/><text class="lbl" x="110" y="104" text-anchor="middle" dy="-6">Mitte</text>' },
+      { h: 'Mittellinie markieren', t: 'Falte das Rechteck einmal von links nach rechts zusammen und klapp es wieder auf. So hast du eine senkrechte Mittellinie.',
+        svg: '<rect class="paper" x="26" y="40" width="168" height="119"/><line class="edge" x1="26" y1="40" x2="194" y2="40"/><line class="fold" x1="110" y1="40" x2="110" y2="159"/><path class="arrow" d="M40 170 C 80 186, 140 186, 180 170"/><text class="lbl" x="110" y="32" text-anchor="middle">Bruchkante</text>' },
+      { h: 'Ecken nach unten', t: 'Falte die beiden oberen Ecken an der Bruchkante nach unten zur Mittellinie. Es entsteht ein Dreieck wie ein Hausdach, unten bleibt ein Streifen frei.',
+        svg: '<polyline class="ghost" points="26,124 26,40 194,40 194,124"/><polygon class="paper" points="110,40 194,124 194,159 26,159 26,124"/><polygon class="flap" points="110,40 26,124 110,124"/><polygon class="flap" points="110,40 194,124 110,124"/><path class="arrow" d="M32 46 C 50 80, 76 104, 98 116"/><path class="arrow" d="M188 46 C 170 80, 144 104, 122 116"/>' },
+      { h: 'Streifen hochfalten', t: 'Falte den unteren Streifen der vorderen Lage über das Dreieck nach oben. Dreh alles um und falte den hinteren Streifen genauso. Fertig ist ein Papierhut – die überstehenden Ecken einfach um die Kante falten.',
+        svg: '<rect class="ghost" x="26" y="124" width="168" height="35"/><polygon class="paper" points="110,40 194,124 26,124"/><rect class="flap" x="26" y="89" width="168" height="35"/><path class="arrow" d="M60 170 C 50 150, 50 130, 58 112"/>' },
+      { h: 'Zum Quadrat öffnen', t: 'Greif von unten in den Hut, zieh ihn auseinander und drück die beiden seitlichen Spitzen aufeinander. Streich alles flach – jetzt steht ein Quadrat auf der Spitze.',
+        svg: '<polygon class="paper" points="110,18 178,96 110,174 42,96"/><line class="fold" x1="42" y1="96" x2="178" y2="96"/><path class="arrow" d="M14 60 C 20 80, 28 90, 36 94"/><path class="arrow" d="M206 60 C 200 80, 192 90, 184 94"/>' },
+      { h: 'Spitzen hochfalten', t: 'Falte die untere Spitze der vorderen Lage hoch bis zur oberen Spitze. Dreh um und mach dasselbe auf der Rückseite. Es entsteht ein Dreieck.',
+        svg: '<polyline class="ghost" points="42,96 110,174 178,96"/><polygon class="paper" points="110,18 178,96 42,96"/><polygon class="flap" points="110,22 172,94 48,94"/><path class="arrow" d="M120 168 C 150 140, 150 80, 122 34"/>' },
+      { h: 'Noch einmal zum Quadrat', t: 'Öffne das Dreieck wieder von unten und drück die seitlichen Spitzen zusammen – genau wie vorhin. Du hast ein kleineres Quadrat.',
+        svg: '<polygon class="paper" points="110,36 164,96 110,156 56,96"/><line class="fold" x1="56" y1="96" x2="164" y2="96"/><path class="arrow" d="M24 70 C 32 86, 40 92, 50 95"/><path class="arrow" d="M196 70 C 188 86, 180 92, 170 95"/>' },
+      { h: 'Auseinanderziehen – fertig!', t: 'Fass die beiden oberen losen Spitzen links und rechts und zieh sie langsam auseinander. Das Boot klappt auf, die Mitte wird zum Segel. Zum Schluss den Boden etwas ausformen, damit es stehen und schwimmen kann.',
+        svg: '<polygon class="paper" points="22,104 198,104 162,150 58,150"/><polygon class="flap" points="110,34 142,104 78,104"/><path class="arrow" d="M70 92 C 54 84, 40 84, 24 90"/><path class="arrow" d="M150 92 C 166 84, 180 84, 196 90"/>' }
+    ]}
+  };
+
+  var VIEWS = { start: 'view-home', timer: 'view-timer', flieger: 'view-guide', boot: 'view-guide' };
+  var cur = null, guide = null, idx = 0;
+  var $ = function(id){ return document.getElementById(id); };
+
+  function renderGuide(){
+    var g = GUIDES[guide], st = g.steps[idx];
+    $('gTitle').textContent = g.title + ' falten';
+    $('gFig').innerHTML = '<svg viewBox="' + g.vb + '" role="img" aria-label="' + st.h + '">' + st.svg + '</svg>';
+    $('gStep').textContent = 'Schritt ' + (idx + 1) + ' von ' + g.steps.length;
+    $('gHead').textContent = st.h;
+    $('gText').textContent = st.t;
+    var d = '';
+    for (var i = 0; i < g.steps.length; i++) d += '<i class="' + (i === idx ? 'on' : '') + '"></i>';
+    $('gDots').innerHTML = d;
+    $('gPrev').disabled = idx === 0;
+    $('gNext').textContent = idx === g.steps.length - 1 ? 'Fertig' : 'Weiter';
+  }
+  function step(dir){
+    var n = GUIDES[guide].steps.length;
+    if (dir > 0 && idx === n - 1) { show('start'); try { history.replaceState(null, '', '#start'); } catch (err) {} return; }
+    idx = Math.max(0, Math.min(n - 1, idx + dir)); renderGuide();
+  }
+  $('gPrev').addEventListener('click', function(){ step(-1); });
+  $('gNext').addEventListener('click', function(){ step(1); });
+  // Wischen
+  var sx = null, sy = null;
+  $('gCard').addEventListener('pointerdown', function(e){ sx = e.clientX; sy = e.clientY; });
+  $('gCard').addEventListener('pointerup', function(e){
+    if (sx === null) return;
+    var dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+  });
+  document.addEventListener('keydown', function(e){
+    if (!guide || cur === 'timer' || cur === 'start') return;
+    if (e.key === 'ArrowRight') step(1); else if (e.key === 'ArrowLeft') step(-1);
+  });
+
+  // Links selbst abfangen: funktioniert auch in Vorschau-Fenstern (iframe), in denen #-Links blockiert sind
+  document.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var h = a.getAttribute('href').slice(1);
+    if (!VIEWS[h]) return;
+    e.preventDefault();
+    show(h);
+    try { if (history.replaceState) history.replaceState(null, '', '#' + h); } catch (err) {}
+  });
+
+  function show(forced){
+    var h = typeof forced === 'string' ? forced : location.hash.replace('#', '');
+    if (!VIEWS[h]) h = 'start';
+    if (cur === 'timer' && h !== 'timer' && window.ChallengesTimer) window.ChallengesTimer.pause();
+    var all = document.querySelectorAll('.view');
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle('active', all[i].id === VIEWS[h]);
+    if (GUIDES[h]) { if (guide !== h) idx = 0; guide = h; renderGuide(); }
+    cur = h;
+    document.title = 'Challenges – ' + (h === 'timer' ? 'Timer' : GUIDES[h] ? GUIDES[h].title : 'Start');
+  }
+  window.addEventListener('hashchange', function(){ show(); });
+  show();
+})();
+</script>
+
 </body>
 </html>
